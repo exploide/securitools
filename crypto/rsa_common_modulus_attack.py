@@ -43,6 +43,7 @@ def common_modulus_attack(modulus, exp1, exp2, msg1, msg2):
     g, s, t = gmpy2.gcdext(exp1, exp2)
     if g != 1:
         print("Error: GCD of the two exponents is not 1!")
+        exit(1)
     tmp1 = gmpy2.powmod(msg1, s, modulus)
     tmp2 = gmpy2.powmod(msg2, t, modulus)
     return int(gmpy2.mod(tmp1 * tmp2, modulus))
