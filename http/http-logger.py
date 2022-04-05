@@ -3,6 +3,7 @@
 import argparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socket
+import ssl
 import sys
 
 
@@ -57,13 +58,29 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
 def main(args):
     with HTTPServerV6(("", args.port), LoggingHTTPRequestHandler) as httpd:
         try:
+            if args.tls_cert:
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                context.load_cert_chain(args.tls_cert, args.tls_key)
+                httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
             httpd.serve_forever()
         except KeyboardInterrupt:
             pass
 
 
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser(description="Log incoming HTTP requests including headers and body", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    argparser.add_argument('--port', '-p', type=int, default=80, help="Port to listen on")
+    argparser = argparse.ArgumentParser(description="Log incoming HTTP requests including headers and body")
+    argparser.add_argument('--port', '-p', type=int, help="Port to listen on (defaults to 80 or 443)")
+    argparser.add_argument('--tls-cert', help="Certificate file for TLS")
+    argparser.add_argument('--tls-key', help="Private key file for TLS")
     parsed_args = argparser.parse_args()
+
+    if (parsed_args.tls_cert and not parsed_args.tls_key) or (parsed_args.tls_key and not parsed_args.tls_cert):
+        argparser.error("--tls-cert and --tls-key are required both for TLS support")
+
+    if not parsed_args.port:
+        if parsed_args.tls_cert:
+            parsed_args.port = 443
+        else:
+            parsed_args.port = 80
+
     main(parsed_args)
