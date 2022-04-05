@@ -14,9 +14,9 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
         print('-'*80)
         head = f"""{self.requestline}\r\n{self.headers}"""
         sys.stdout.write(head)
-        size = int(self.headers['Content-Length'])
+        size = self.headers['Content-Length']
         if size:
-            body = self.rfile.read(size)
+            body = self.rfile.read(int(size))
             sys.stdout.buffer.write(body)
             sys.stdout.buffer.flush()
             sys.stdout.write('\r\n')
