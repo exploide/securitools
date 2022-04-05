@@ -2,7 +2,12 @@
 
 import argparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import socket
 import sys
+
+
+class HTTPServerV6(HTTPServer):
+    address_family = socket.AF_INET6
 
 
 class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -50,7 +55,7 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def main(args):
-    with HTTPServer(("0.0.0.0", args.port), LoggingHTTPRequestHandler) as httpd:
+    with HTTPServerV6(("", args.port), LoggingHTTPRequestHandler) as httpd:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
