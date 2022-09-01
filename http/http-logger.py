@@ -7,6 +7,9 @@ import ssl
 import sys
 
 
+ARGS = None
+
+
 class HTTPServerV6(HTTPServer):
     address_family = socket.AF_INET6
 
@@ -18,7 +21,7 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
         if size:
             body = self.rfile.read(int(size))
         print('='*80)
-        self.send_response(200)
+        self.send_response(ARGS.response_code)
         self.end_headers()
         print('-'*80)
         sys.stdout.write(head)
@@ -56,12 +59,12 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
         self._handle_request()
 
 
-def main(args):
-    with HTTPServerV6(("", args.port), LoggingHTTPRequestHandler) as httpd:
+def main():
+    with HTTPServerV6(("", ARGS.port), LoggingHTTPRequestHandler) as httpd:
         try:
-            if args.tls_cert:
+            if ARGS.tls_cert:
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-                context.load_cert_chain(args.tls_cert, args.tls_key)
+                context.load_cert_chain(ARGS.tls_cert, ARGS.tls_key)
                 httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
             httpd.serve_forever()
         except KeyboardInterrupt:
@@ -73,6 +76,7 @@ if __name__ == '__main__':
     argparser.add_argument('--port', '-p', type=int, help="Port to listen on (defaults to 80 or 443)")
     argparser.add_argument('--tls-cert', help="Certificate file for TLS")
     argparser.add_argument('--tls-key', help="Private key file for TLS")
+    argparser.add_argument('--response-code', '-C', type=int, default=200, help="HTTP response code to return (default: 200)")
     parsed_args = argparser.parse_args()
 
     if (parsed_args.tls_cert and not parsed_args.tls_key) or (parsed_args.tls_key and not parsed_args.tls_cert):
@@ -84,4 +88,5 @@ if __name__ == '__main__':
         else:
             parsed_args.port = 80
 
-    main(parsed_args)
+    ARGS = parsed_args
+    main()
