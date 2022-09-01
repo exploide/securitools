@@ -22,6 +22,8 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
             body = self.rfile.read(int(size))
         print('='*80)
         self.send_response(ARGS.response_code)
+        for h in ARGS.response_headers:
+            self.send_header(*h.split(':', maxsplit=1))
         self.end_headers()
         print('-'*80)
         sys.stdout.write(head)
@@ -77,6 +79,7 @@ if __name__ == '__main__':
     argparser.add_argument('--tls-cert', help="Certificate file for TLS")
     argparser.add_argument('--tls-key', help="Private key file for TLS")
     argparser.add_argument('--response-code', '-C', type=int, default=200, help="HTTP response code to return (default: 200)")
+    argparser.add_argument('--response-headers', '-H', nargs='*', default=[], help="HTTP response headers to include ('Header:Value' ...)")
     parsed_args = argparser.parse_args()
 
     if (parsed_args.tls_cert and not parsed_args.tls_key) or (parsed_args.tls_key and not parsed_args.tls_cert):
