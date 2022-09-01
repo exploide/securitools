@@ -13,19 +13,20 @@ class HTTPServerV6(HTTPServer):
 
 class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
     def _handle_request(self):
-        print()
+        head = f"""{self.requestline}\r\n{self.headers}"""
+        size = self.headers['Content-Length']
+        if size:
+            body = self.rfile.read(int(size))
         print('='*80)
         self.send_response(200)
         self.end_headers()
         print('-'*80)
-        head = f"""{self.requestline}\r\n{self.headers}"""
         sys.stdout.write(head)
-        size = self.headers['Content-Length']
         if size:
-            body = self.rfile.read(int(size))
             sys.stdout.buffer.write(body)
             sys.stdout.buffer.flush()
             sys.stdout.write('\r\n')
+        print()
 
     def do_GET(self):
         self._handle_request()
