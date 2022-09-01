@@ -40,7 +40,7 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
         if size:
             sys.stdout.buffer.write(body)
             sys.stdout.buffer.flush()
-            sys.stdout.write('\r\n')
+            print()
         print()
 
     def do_GET(self):
