@@ -20,12 +20,22 @@ class LoggingHTTPRequestHandler(BaseHTTPRequestHandler):
         size = self.headers['Content-Length']
         if size:
             body = self.rfile.read(int(size))
+
+        response_size = 0
+        if ARGS.response_body:
+            response_body = ARGS.response_body.encode()
+            response_size = len(response_body)
+
         print('='*80)
         self.send_response(ARGS.response_code)
         for h in ARGS.response_headers:
             self.send_header(*h.split(':', maxsplit=1))
+        self.send_header('Content-Length', response_size)
         self.end_headers()
+        if ARGS.response_body:
+            self.wfile.write(response_body)
         print('-'*80)
+
         sys.stdout.write(head)
         if size:
             sys.stdout.buffer.write(body)
@@ -80,6 +90,7 @@ if __name__ == '__main__':
     argparser.add_argument('--tls-key', help="Private key file for TLS")
     argparser.add_argument('--response-code', '-C', type=int, default=200, help="HTTP response code to return (default: 200)")
     argparser.add_argument('--response-headers', '-H', nargs='*', default=[], help="HTTP response headers to include ('Header:Value' ...)")
+    argparser.add_argument('--response-body', '-B', help="HTTP response body to send")
     parsed_args = argparser.parse_args()
 
     if (parsed_args.tls_cert and not parsed_args.tls_key) or (parsed_args.tls_key and not parsed_args.tls_cert):
