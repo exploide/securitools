@@ -59,4 +59,4 @@ if __name__ == "__main__":
         print(crypt(args.text, args.n))
     else:
         for i, s in enumerate(crypt_all(args.text), start=1):
-            print("ROT {}:\n{}\n".format(i, s))
+            print(f"ROT {i}:\n{s}\n")
