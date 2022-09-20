@@ -2,11 +2,17 @@
 
 """
 Tool to perform the low exponent attack against RSA.
+
+If the public exponent e is sufficiently small and
+one obtained e times the ciphertext of a fixed message
+along with the differing moduli, the plaintext can be
+recovered.
 """
 
 import argparse
 from functools import reduce
 from operator import mul
+import sys
 
 import gmpy2
 
@@ -51,23 +57,41 @@ def low_exponent_attack(moduli, ciphertexts):
     return int(root)
 
 
+def parse_file(filename, input_base):
+    """
+    Parse input file containing moduli or ciphertexts and return a list of them
+    """
+
+    content = []
+    with open(filename, encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                content.append(int(line, input_base))
+    if len(set(content)) != len(content):
+        print(f"Error: {filename} contains some duplicates, this won't work!", file=sys.stderr)
+        sys.exit(1)
+    return content
+
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Perform low exponent attack against RSA.")
     argparser.add_argument("moduli", help="file containing the used RSA moduli one per line")
     argparser.add_argument("ciphertexts", help="file containing the ciphertexts one per line")
+    argparser.add_argument("--hex", dest="base", action="store_const", const=16, default=10, help="data in input files is hex encoded")
     args = argparser.parse_args()
 
-    rsa_moduli = []
-    rsa_ciphertexts = []
+    rsa_moduli = parse_file(args.moduli, args.base)
+    rsa_ciphertexts = parse_file(args.ciphertexts, args.base)
 
-    with(open(args.moduli)) as f:
-        for line in f:
-            if line.strip() != "":
-                rsa_moduli.append(int(line))
+    plain_int = low_exponent_attack(rsa_moduli, rsa_ciphertexts)
+    print("Plaintext (integer):")
+    print(plain_int)
 
-    with(open(args.ciphertexts)) as f:
-        for line in f:
-            if line.strip() != "":
-                rsa_ciphertexts.append(int(line))
+    plain_hex = hex(plain_int)[2:]
+    print("Plaintext (hex):")
+    print(plain_hex)
 
-    print(low_exponent_attack(rsa_moduli, rsa_ciphertexts))
+    plain_bytes = bytes.fromhex(plain_hex)
+    plain_utf8 = plain_bytes.decode('utf-8')
+    print("Plaintext (utf-8):")
+    print(plain_utf8)
