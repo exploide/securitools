@@ -2,8 +2,13 @@
 
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import sys
 
-from websocket import create_connection
+try:
+    from websocket import create_connection
+except ModuleNotFoundError:
+    print("Error: Missing dependency websocket-client", file=sys.stderr)
+    sys.exit(1)
 
 
 ARGS = None
