@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Generate lists of potential account names, based on file input.
-Lists for different naming schemes will be generated.
+Generate lists of potential account names.
+
+Giving input files containing first and last names,
+multiple output files will be generated containing
+potential account names for different naming schemes.
+
+The lists can be used for brute-forcing valid user names
+or password spraying.
 """
 
 import argparse

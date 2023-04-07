@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Tool to perform the common modulus attack against RSA.
+
+If two different RSA keys (i.e. different exponents) share
+the same modulus and a plaintext is encrypted with both keys,
+it is possible to recover the plaintext when observing both
+ciphertexts and public keys.
+"""
+
 import argparse
 import base64
 import sys

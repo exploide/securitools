@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+"""
+A simple HTTP to websocket proxy.
+
+Starts an HTTP server and listens to incoming POST requests.
+The request body is then forwarded to a given websocket URL.
+The response of the websocket message is returned as the HTTP response.
+
+This can be useful when analyzing a websocket endpoint for security
+issues but the desired attack tool only supports sending HTTP requests.
+"""
+
 import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import sys

@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
 
+"""
+A simple HTTP logger that logs incoming requests.
+
+Starts an HTTP server and listens to incoming requests.
+Requests are logged to stdout including headers and body.
+
+It is also possible to configure the response code, headers
+and body returned by the server.
+
+A typical use case is analyzing the behavior of a
+server-side request forgery (SSRF) vulnerability.
+"""
+
 import argparse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socket
