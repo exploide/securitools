@@ -38,7 +38,10 @@ class WsProxyHTTPRequestHandler(BaseHTTPRequestHandler):
         if size:
             data = self.rfile.read(int(size))
         else:
-            data = ""
+            self.send_response(411)
+            self.end_headers()
+            self.wfile.write(b"Proxy error: Set a Content-Length header and send data in the POST body.")
+            return
 
         ws_response = self._send_websocket_message(ARGS.target, data)
         ws_response = ws_response.encode()
