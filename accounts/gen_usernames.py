@@ -40,6 +40,13 @@ def main(names_files):
             else:
                 f.write(name[0] + '\n')
 
+    with open("f.last.txt", 'w', encoding='utf-8') as f:
+        for name in names:
+            if len(name) > 1:
+                f.write(name[0][0] + '.' + name[-1] + '\n')
+            else:
+                f.write(name[0] + '\n')
+
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Generate lists of potential usernames")
