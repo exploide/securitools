@@ -55,6 +55,8 @@ class WsProxyHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b"Proxy error: Websocket server prematurely closed the connection.")
             return
 
+        if isinstance(ws_response, str):
+            ws_response = ws_response.encode()
         self.send_response(200)
         self.send_header('Content-Length', len(ws_response))
         self.end_headers()
