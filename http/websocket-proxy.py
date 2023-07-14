@@ -9,6 +9,10 @@ The response of the websocket message is returned as the HTTP response.
 
 This can be useful when analyzing a websocket endpoint for security
 issues but the desired attack tool only supports sending HTTP requests.
+
+For authentication, an initial message to be send can be specified as a
+cli argument. If cookies are used for authentication, the header is
+automatically copied from the incoming request to the handshake request.
 """
 
 import argparse
@@ -27,8 +31,8 @@ ARGS = None
 
 
 class WsProxyHTTPRequestHandler(BaseHTTPRequestHandler):
-    def _send_websocket_message(self, target, data):
-        ws = create_connection(target, **ARGS.connect_args)
+    def _send_websocket_message(self, data, cookie):
+        ws = create_connection(ARGS.target, cookie=cookie, **ARGS.connect_args)
         if ARGS.init_send:
             ws.send(ARGS.init_send)
             ws.recv()
@@ -47,8 +51,10 @@ class WsProxyHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b"Proxy error: Set a Content-Length header and send data in the POST body.")
             return
 
+        cookie = self.headers['Cookie']
+
         try:
-            ws_response = self._send_websocket_message(ARGS.target, data)
+            ws_response = self._send_websocket_message(data, cookie)
         except WebSocketConnectionClosedException:
             self.send_response(502)
             self.end_headers()
@@ -81,7 +87,6 @@ if __name__ == "__main__":
     argparser.add_argument('--init-send', type=str, metavar="MESSAGE", help="Initial message to send after each new connection (e.g. authentication)")
     argparser.add_argument('target', help="Websocket URL to proxy to")
     parsed_args = argparser.parse_args()
-
 
     parsed_args.connect_args = {}
 
