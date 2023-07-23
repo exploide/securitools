@@ -14,10 +14,25 @@ from email.utils import formatdate
 import mimetypes
 import os
 import smtplib
+import ssl
 import sys
 
 
-def send_email(server, port, from_addr, to_addrs, subject, content, attachments, security, envelope_from=None, envelope_to=None):
+def send_email(
+    server,
+    port,
+    from_addr,
+    to_addrs,
+    subject,
+    content,
+    attachments=None,
+    security="starttls",
+    insecure=False,
+    username=None,
+    password=None,
+    envelope_from=None,
+    envelope_to=None
+):
     msg = EmailMessage()
     msg["Date"] = formatdate(localtime=True)
     msg["From"] = from_addr
@@ -34,9 +49,17 @@ def send_email(server, port, from_addr, to_addrs, subject, content, attachments,
             with open(attachment, "rb") as f:
                 msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=os.path.basename(attachment))
 
-    smtp = smtplib.SMTP(server, port=port)
-    if security == "starttls":
-        smtp.starttls()
+    ssl_context = ssl.create_default_context() if not insecure else None
+    if security == "tls":
+        smtp = smtplib.SMTP_SSL(server, port=port, context=ssl_context)
+    else:
+        smtp = smtplib.SMTP(server, port=port)
+        if security == "starttls":
+            smtp.starttls(context=ssl_context)
+
+    if username and password:
+        smtp.login(username, password)
+
     smtp.send_message(msg, from_addr=envelope_from, to_addrs=envelope_to)
     smtp.quit()
 
@@ -50,7 +73,9 @@ def main():
     argparser.add_argument("--subject", "-s", required=True, help="Subject line")
     argparser.add_argument("--content", "-c", help="Message content (if not set, read from stdin)")
     argparser.add_argument("--attach", "-a", metavar="FILE", nargs="+", help="File attachments")
-    argparser.add_argument("--sec", choices=["none", "starttls"], default="starttls", help="Connection security (default: starttls)")
+    argparser.add_argument("--sec", choices=["none", "starttls", "tls"], default="starttls", help="Connection security (default: starttls)")
+    argparser.add_argument("--insecure", action="store_true", help="Disable TLS certificate checks")
+    argparser.add_argument("--auth", help="Authentication credentials (username:password)")
     argparser.add_argument("server", help="SMTP server to connect to (with optional port suffix, default :25)")
     args = argparser.parse_args()
 
@@ -66,9 +91,28 @@ def main():
     else:
         content = args.content
 
+    if args.auth:
+        username, password = args.auth.split(":", maxsplit=1)
+    else:
+        username, password = None, None
+
     try:
-        send_email(server, port, args.from_addr, args.to_addrs, args.subject, content, args.attach, args.sec, args.envelope_from, args.envelope_to)
-    except smtplib.SMTPException as e:
+        send_email(
+            server,
+            port,
+            args.from_addr,
+            args.to_addrs,
+            args.subject,
+            content,
+            args.attach,
+            args.sec,
+            args.insecure,
+            username,
+            password,
+            args.envelope_from,
+            args.envelope_to
+        )
+    except (smtplib.SMTPException, ssl.SSLCertVerificationError) as e:
         print(f"{e.__class__.__name__}: {e}", file=sys.stderr)
         sys.exit(1)
 
