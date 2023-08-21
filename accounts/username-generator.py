@@ -50,8 +50,8 @@ def main(names_files):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description="Generate lists of potential usernames")
-    argparser.add_argument('names', nargs='+', help="Files containing name entries. Either one file with 'Firstname Lastname' or two separate files with 'Firstname' and 'Lastname' for cartesian product.")
+    argparser.add_argument('names', nargs='+', help="Files containing name entries. Either one file with 'Firstname Lastname' entries combined, or two separate files with 'Firstname' and 'Lastname' entries for cartesian product.")
     parsed_args = argparser.parse_args()
     if len(parsed_args.names) > 2:
-        argparser.error("Give either one file with 'Firstname Lastname' or two separate files with 'Firstname' and 'Lastname' for cartesian product.")
+        argparser.error("Give either one file with 'Firstname Lastname' entries combined, or two separate files with 'Firstname' and 'Lastname' entries for cartesian product.")
     main(parsed_args.names)
