@@ -66,17 +66,24 @@ def send_email(
 
 def main():
     argparser = argparse.ArgumentParser(description="Send an email to an SMTP server.")
-    argparser.add_argument("--from", "-f", metavar="ADDR", dest="from_addr", required=True, help="Sender's email address (From header)")
-    argparser.add_argument("--to", "-t", metavar="ADDR", dest="to_addrs", required=True, nargs="+", help="Recipients' email addresses (To header)")
-    argparser.add_argument("--envelope-from", metavar="ADDR", help="Set different sender's address for envelope (MAIL FROM)")
-    argparser.add_argument("--envelope-to", metavar="ADDR", nargs="+", help="Set different recipients' addresses for envelope (RCPT TO)")
-    argparser.add_argument("--subject", "-s", required=True, help="Subject line")
-    argparser.add_argument("--content", "-c", help="Message content (if not set, read from stdin)")
-    argparser.add_argument("--attach", "-a", metavar="FILE", nargs="+", help="File attachments")
-    argparser.add_argument("--sec", choices=["none", "starttls", "tls"], default="starttls", help="Connection security (default: starttls)")
-    argparser.add_argument("--insecure", action="store_true", help="Disable TLS certificate checks")
-    argparser.add_argument("--auth", help="Authentication credentials (username:password)")
     argparser.add_argument("server", help="SMTP server to connect to (with optional port suffix, default :25)")
+
+    addressing_group = argparser.add_argument_group("addressing")
+    addressing_group.add_argument("--from", "-f", metavar="ADDR", dest="from_addr", required=True, help="Sender's email address (From header)")
+    addressing_group.add_argument("--to", "-t", metavar="ADDR", dest="to_addrs", required=True, nargs="+", help="Recipients' email addresses (To header)")
+    addressing_group.add_argument("--envelope-from", metavar="ADDR", help="Set different sender's address for envelope (MAIL FROM)")
+    addressing_group.add_argument("--envelope-to", metavar="ADDR", nargs="+", help="Set different recipients' addresses for envelope (RCPT TO)")
+
+    content_group = argparser.add_argument_group("content")
+    content_group.add_argument("--subject", "-s", required=True, help="Subject line")
+    content_group.add_argument("--content", "-c", help="Message content (if not set, read from stdin)")
+    content_group.add_argument("--attach", "-a", metavar="FILE", nargs="+", help="File attachments")
+
+    security_group = argparser.add_argument_group("security")
+    security_group.add_argument("--auth", help="Authentication credentials (username:password)")
+    security_group.add_argument("--sec", choices=["none", "starttls", "tls"], default="starttls", help="Connection security (default: starttls)")
+    security_group.add_argument("--insecure", action="store_true", help="Disable TLS certificate checks")
+
     args = argparser.parse_args()
 
     target = args.server.rsplit(":", maxsplit=1)
