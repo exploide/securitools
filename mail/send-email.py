@@ -35,7 +35,7 @@ def send_email(
     envelope_to=None
 ):
     msg = EmailMessage()
-    msg["Date"] = formatdate(localtime=True)
+    msg["Date"] = formatdate()
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_addrs)
     msg["Subject"] = subject
