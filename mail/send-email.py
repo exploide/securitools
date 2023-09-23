@@ -4,7 +4,7 @@
 Send an email to an SMTP server.
 
 This script simply allows to submit an email to an SMTP server.
-It supports explicitly setting certail values like the envolope
+It supports explicitly setting certain values like the envolope
 fields MAIL FROM and RCPT TO, which can be useful for spoofing attacks.
 """
 
@@ -25,6 +25,7 @@ def send_email(
     to_addrs,
     subject,
     content,
+    content_type="plain",
     attachments=None,
     security="starttls",
     insecure=False,
@@ -38,7 +39,7 @@ def send_email(
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_addrs)
     msg["Subject"] = subject
-    msg.set_content(content)
+    msg.set_content(content, subtype=content_type)
 
     if attachments:
         for attachment in attachments:
@@ -77,6 +78,7 @@ def main():
     content_group = argparser.add_argument_group("content")
     content_group.add_argument("--subject", "-s", required=True, help="Subject line")
     content_group.add_argument("--content", "-c", help="Message content (if not set, read from stdin)")
+    content_group.add_argument("--html", dest="content_type", action="store_const", const="html", default="plain", help="Set Content-Type to text/html instead of text/plain")
     content_group.add_argument("--attach", "-a", metavar="FILE", nargs="+", help="File attachments")
 
     security_group = argparser.add_argument_group("security")
@@ -111,6 +113,7 @@ def main():
             args.to_addrs,
             args.subject,
             content,
+            args.content_type,
             args.attach,
             args.sec,
             args.insecure,
