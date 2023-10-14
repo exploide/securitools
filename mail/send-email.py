@@ -16,6 +16,7 @@ import os
 import smtplib
 import ssl
 import sys
+import uuid
 
 
 def send_email(
@@ -35,9 +36,10 @@ def send_email(
     envelope_to=None
 ):
     msg = EmailMessage()
-    msg["Date"] = formatdate()
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_addrs)
+    msg["Date"] = formatdate()
+    msg["Message-ID"] = f"<{uuid.uuid4()}@{from_addr.split('@')[-1]}>"
     msg["Subject"] = subject
     msg.set_content(content, subtype=content_type)
 
