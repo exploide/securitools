@@ -8,13 +8,13 @@ network interfaces to it. The bridge interface can then be
 monitored to observe traffic flowing over the bridge.
 
 It also sets the group_fwd_mask to the maximum possible value
-in order to also forward traffic destined to
+(by default) in order to also forward traffic destined to
 'IEEE 802.1D MAC Bridge Filtered MAC Group Addresses'
 which would otherwise not be forwarded.
 This is required, e.g. for 802.1X EAP traffic to cross the bridge.
 
 In order to avoid traffic originating from the bridge setup,
-IPv6 is disabled on the involved interfaces, due to SLAAC traffic.
+IPv6 is disabled on the bridge interface, due to SLAAC traffic.
 """
 
 import argparse
@@ -37,29 +37,28 @@ except ModuleNotFoundError:
 def setup_sniffbridge(bridge, interfaces, fwd_mask):
     with NDB() as ndb:
         log.info("Creating bridge interface %s", bridge)
-        with ndb.interfaces.create(ifname=bridge, kind="bridge") as br:
-            for ifname in interfaces:
-                log.info("Disabling IPv6 on interface %s", ifname)
-                subprocess.run(["sysctl", "-q", "-w", f"net.ipv6.conf.{ifname}.disable_ipv6=1"], check=True)
-                log.info("Attaching interface %s to bridge", ifname)
-                br.add_port(ifname)
-            log.info("Setting fwd_mask %d for bridge", fwd_mask)
-            br.set(state="down", br_group_fwd_mask=fwd_mask)
-            br.commit()
-            log.info("Disabling IPv6 on bridge interface %s", bridge)
-            subprocess.run(["sysctl", "-q", "-w", f"net.ipv6.conf.{bridge}.disable_ipv6=1"], check=True)
-            log.info("Setting bridge interface %s up", bridge)
-            br.set(state="up")
+        br = ndb.interfaces.create(ifname=bridge, kind="bridge")
+
+        log.info("Setting group_fwd_mask for bridge to %d", fwd_mask)
+        br.set(state="down", br_group_fwd_mask=fwd_mask)
+        br.commit()
+
+        log.info("Disabling IPv6 on bridge interface")
+        subprocess.run(["sysctl", "-q", "-w", f"net.ipv6.conf.{bridge}.disable_ipv6=1"], check=True)
+
+        for ifname in interfaces:
+            log.info("Attaching interface %s to bridge", ifname)
+            br.add_port(ifname)
+
+        log.info("Setting bridge interface up")
+        br.set(state="up")
+        br.commit()
 
 
-def teardown_sniffbridge(bridge, interfaces):
+def teardown_sniffbridge(bridge):
     with NDB() as ndb:
         log.info("Removing bridge interface %s", bridge)
-        with ndb.interfaces[bridge] as br:
-            br.remove()
-    for ifname in interfaces:
-        log.info("Enabling IPv6 on interface %s", ifname)
-        subprocess.run(["sysctl", "-q", "-w", f"net.ipv6.conf.{ifname}.disable_ipv6=0"], check=True)
+        ndb.interfaces[bridge].remove().commit()
 
 
 def main():
@@ -81,7 +80,7 @@ def main():
         sys.exit(1)
 
     if parsed_args.cleanup:
-        teardown_sniffbridge(parsed_args.bridge, parsed_args.interfaces)
+        teardown_sniffbridge(parsed_args.bridge)
     else:
         setup_sniffbridge(parsed_args.bridge, parsed_args.interfaces, parsed_args.fwd_mask)
 
