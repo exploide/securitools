@@ -2,7 +2,7 @@
  * This program invokes a custom PowerShell runspace in order to bypass Constrained Language Mode and AppLocker.
  *
  * To build this tool without Visual Studio, the csc.exe compiler can be used, which is installed by default:
- * > C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /reference:C:\Windows\assembly\GAC_MSIL\System.Management.Automation\1.0.0.0__31bf3856ad364e35\System.Management.Automation.dll /target:exe /platform:x64 .\PSRunspace.cs
+ * > C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe /reference:C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Management.Automation\v4.0_3.0.0.0__31bf3856ad364e35\System.Management.Automation.dll /target:exe /platform:x64 .\PSRunspace.cs
  *
  * To run the shell interactively, either directly:
  * > .\PSRunspace.exe
@@ -39,7 +39,6 @@ namespace CustomRunspace
             Runspace rs = RunspaceFactory.CreateRunspace();
             rs.Open();
 
-            Exec(rs, "Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process");
             string envcmd = Environment.GetEnvironmentVariable("PSCMD");
 
             if (args.Length > 0)
@@ -59,7 +58,7 @@ namespace CustomRunspace
             {
                 while (true)
                 {
-                    Console.Write("FullPS {0}> ", rs.SessionStateProxy.Path.CurrentLocation.Path.ToString());
+                    Console.Write("FullPS {0}> ", rs.SessionStateProxy.Path.CurrentLocation.ProviderPath.ToString());
                     string cmdline = Console.ReadLine();
                     if (cmdline == "exit")
                     {
